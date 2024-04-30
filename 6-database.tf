@@ -4,12 +4,13 @@ resource "random_id" "db_name_suffix" {
 
 resource "google_sql_database_instance" "postgres_instance" {
   name             = "postgres-instance"
+  region  = var.region
+  project = var.project_id
   database_version = "POSTGRES_14"
 
   depends_on = [google_service_networking_connection.default]
-
-  region  = var.region
-  project = var.project_id
+ 
+  deletion_protection = false
 
   settings {
     # Second-generation instance tiers are based on the machine
@@ -25,3 +26,12 @@ resource "google_sql_database_instance" "postgres_instance" {
   }
 }
 
+resource "google_sql_user" "user" {
+  depends_on = [
+    "google_sql_database_instance.postgres_instance",    
+  ]
+
+  instance = "${google_sql_database_instance.postgres_instance.name}"
+  name     = "${var.sql_user}"
+  password = "${var.sql_pass}"
+}
